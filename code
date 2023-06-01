@@ -1,0 +1,388 @@
+#include <SFML/Graphics.hpp>
+#include <time.h>
+
+using namespace sf;
+
+const int hight = 29;				//Высота карты
+const int width = 29;				//Ширина карты
+
+const int block = 25;				//Размер объектов
+
+int cakes_num = 0;					//Количество съеденных пирожных
+bool life = true;					//Жизнь
+
+String Map[hight] = {				//Карта
+"WWWWWWWWWWWWWWVWWWWWWWWWWWWWW",
+"W            WVW            W",
+"W WWWWW WWWW WVW WWWW WWWWW W",
+"W    WW W    WVW    W WW    W",
+"W WW 1  W WWWWVWWWW W  2 WW W",
+"W WW WW W           W WW WW W",
+"W    W  W WWWWWWWWW W  W    W",
+"WWWW W WW     W     WW W WWWW",
+"W    W W  WWW W WWW  W W    W",
+"W WWWW W WW W W W WW W WWWW W",
+"W           W   W           W",
+"W WWWWWWWW WWWWWWW WWWWWWWW W",
+"W     W    WVVVVVW    W     W",
+"WWWWW W WW WVWVWVW WW W WWWWW",
+"VVVVV W WW  VWPWV  WW W VVVVV",
+"WWWWW W WW WVWVWVW WW W WWWWW",
+"W     W    WVVVVVW    W     W",
+"W WWWWWWWW WWWWWWW WWWWWWWW W",
+"W           W   W           W",
+"W WWWW W WW W W W WW W WWWW W",
+"W    W W  WWW W WWW  W W    W",
+"WWWW W WW     W     WW W WWWW",
+"W    W  W WWWWWWWWW W  W    W",
+"W WW WW W           W WW WW W",
+"W WW 3  W WWWWVWWWW W  4 WW W",
+"W    WW W    WVW    W WW    W",
+"W WWWWW WWWW WVW WWWW WWWWW W",
+"W            WVW            W",
+"WWWWWWWWWWWWWWVWWWWWWWWWWWWWW",
+};
+
+class Player {						//Класс игрока
+public:
+	float frame = 0;				//Кадры анимации
+	int x = 14, y = 14;				//Координаты
+	int changex = 0, changey = 0;	//Измененные координаты
+	int rotate = 0, del = 0;		//Поворот и задержка
+
+	void changeP() {
+		//Анимация игрока
+		frame += 0.03;
+		if (frame > 6)
+			frame -= 6;
+		del++;
+
+		if (del >= 100) {
+			//Перемещение игрока
+			switch (rotate)
+			{
+			case 0:
+				if (Map[y][changex + 1] != 'W')
+					changex += 1;
+				break;
+			case 1:
+				if (Map[y][changex - 1] != 'W')
+					changex -= 1;
+				break;
+			case 2:
+				if (Map[changey - 1][x] != 'W')
+					changey -= 1;
+				break;
+			case 3:
+				if (Map[changey + 1][x] != 'W')
+					changey += 1;
+				break;
+			}
+
+			del = 0;
+		}
+
+		if (Map[changey][changex] == ' ' || Map[changey][changex] == 'V') {
+
+			//Счетчик съеденных кексов
+			if (Map[changey][changex] == ' ')
+				cakes_num++;
+
+			//Проверка на жизнь
+			if (Map[changey][changex] == '1'
+				|| Map[changey][changex] == '2' || Map[changey][changex] == '3' || Map[changey][changex] == '4')
+				life = false;
+
+			Map[y][x] = 'V';
+
+			Map[changey][changex] = 'P';
+
+			x = changex;
+			y = changey;
+		}
+
+		//Горизонтальный телепорт для игрока
+		if (changey == 14 && (changex == 0 || changex == 28)) {
+			if (changex == 0)
+				changex = 27;
+			else
+				changex = 1;
+
+			Map[y][x] = 'V';
+			Map[changey][changex] = 'P';
+
+			x = changex;
+			y = changey;
+		}
+
+		//Вертикальный телепорт для игрока
+		if (changex == 14 && (changey == 0 || changey == 28)) {
+			if (changey == 0)
+				changey = 27;
+			else
+				changey = 1;
+
+			Map[y][x] = 'V';
+			Map[changey][changex] = 'P';
+
+			x = changex;
+			y = changey;
+		}
+	}
+};
+
+class Enemy {														//Класс врага
+public:
+	int x[4] = { 5, 23 , 5, 23 }, y[4] = { 4, 4, 24, 24 };			//Координаты 4 врагов
+	int changex[4] = { 0 , 0 , 0, 0 }, changey[4] = { 0, 0, 0, 0 };	//Измененные координаты
+	int rotate[4] = { 1, 1, 1, 1 }, del = 0;						//Поворот и задержка
+
+	void changeE() {
+		del++;
+
+		//Рандомное перемещение врагов и их анимацмя
+		if (del >= 100) {
+			for (int i = 0; i < 4; i++) {
+				rotate[i] = rand() % 4 + 1;
+
+				changex[i] = x[i];
+				changey[i] = y[i];
+
+				switch (rotate[i])
+				{
+				case 1:
+					if (Map[y[i]][changex[i] + 1] != 'W')
+						changex[i] += 1;
+					break;
+				case 2:
+					if (Map[y[i]][changex[i] - 1] != 'W')
+						changex[i] -= 1;
+					break;
+				case 3:
+					if (Map[changey[i] - 1][x[i]] != 'W')
+						changey[i] -= 1;
+					break;
+				case 4:
+					if (Map[changey[i] + 1][x[i]] != 'W')
+						changey[i] += 1;
+					break;
+				}
+			}
+
+			del = 0;
+		}
+
+		//Условия взаимодействия с объектами
+		for (int i = 0; i < 4; i++) {
+			if (Map[changey[i]][changex[i]] == ' ' || Map[changey[i]][changex[i]] == 'V' ||
+				Map[changey[i]][changex[i]] == 'P') {
+				//Если на пути пустота, оставить пустоту
+				if (Map[changey[i]][changex[i]] == 'V')
+					Map[y[i]][x[i]] = 'V';
+				//Если на пути кекс, оставить кекс
+				else if (Map[changey[i]][changex[i]] == ' ')
+					Map[y[i]][x[i]] = ' ';
+				//Если враг встретился с игроком, игрок погибает
+				else if (Map[changey[i]][changex[i]] == 'P')
+					life = false;
+
+				if (i == 0)
+					Map[changey[i]][changex[i]] = '1';
+				if (i == 1)
+					Map[changey[i]][changex[i]] = '2';
+				if (i == 2)
+					Map[changey[i]][changex[i]] = '3';
+				if (i == 3)
+					Map[changey[i]][changex[i]] = '4';
+
+				x[i] = changex[i];
+				y[i] = changey[i];
+			}
+
+			//Горизонтальный телепорт для врагов
+			if (changey[i] == 14 && (changex[i] == 0 || changex[i] == 28)) {
+				if (changex[i] == 0)
+					changex[i] = 27;
+				else
+					changex[i] = 1;
+
+				Map[y[i]][x[i]] = 'V';
+
+				if (i == 0)
+					Map[changey[i]][changex[i]] = '1';
+				if (i == 1)
+					Map[changey[i]][changex[i]] = '2';
+				if (i == 2)
+					Map[changey[i]][changex[i]] = '3';
+				if (i == 3)
+					Map[changey[i]][changex[i]] = '4';
+
+				x[i] = changex[i];
+				y[i] = changey[i];
+			}
+
+			//Вертикальный телепорт для врагов
+			if (changex[i] == 14 && (changey[i] == 0 || changey[i] == 28)) {
+				if (changey[i] == 0)
+					changey[i] = 27;
+				else
+					changey[i] = 1;
+
+				Map[y[i]][x[i]] = 'V';
+
+				if (i == 0)
+					Map[changey[i]][changex[i]] = '1';
+				if (i == 1)
+					Map[changey[i]][changex[i]] = '2';
+				if (i == 2)
+					Map[changey[i]][changex[i]] = '3';
+				if (i == 3)
+					Map[changey[i]][changex[i]] = '4';
+
+				x[i] = changex[i];
+				y[i] = changey[i];
+			}
+		}
+	}
+};
+
+//Основная функция
+int main() {
+	//Запуск окна с игрой
+	srand(time(0));
+	RenderWindow window(VideoMode(width * block, hight * block), "Pacman");
+
+	//Загрузка текстур
+	Texture w;		//Стены
+	w.loadFromFile("C:/Пакман/Paint/Wall.png");
+	Sprite wall(w);
+
+	Texture pac;	//Пакмен
+	pac.loadFromFile("C:/Пакман/Paint/pacman.png");
+	Sprite pacman(pac);
+
+	Texture c;		//Кексы
+	c.loadFromFile("C:/Пакман/Paint/Cake.png");
+	Sprite cake(c);
+
+	Texture e;		//Враги
+	e.loadFromFile("C:/Пакман/Paint/Enemy.png");
+	Sprite enemy(e);
+
+	Texture win_t;		//Победа
+	win_t.loadFromFile("C:/Пакман/Paint/win.png");
+	Sprite win(win_t);
+
+	Texture lose_t;		//Поражение
+	lose_t.loadFromFile("C:/Пакман/Paint/lose.png");
+	Sprite lose(lose_t);
+
+	Player pl;			//Игрок
+	Enemy en;			//Враги
+
+	//Пока окно открыто
+	while (window.isOpen())
+	{
+		Event event;
+		while (window.pollEvent(event))
+		{
+			//Попытка закрыть окно
+			if (event.type == Event::Closed)
+				window.close();
+
+			//Если не собраны все кексы и игрок жив, можно перемещаться
+			if (cakes_num < 372 && life)
+				if (event.type == Event::KeyPressed) {
+					pl.changex = pl.x;
+					pl.changey = pl.y;
+
+					//Условия перемещения
+					if (event.key.code == Keyboard::D || event.key.code == Keyboard::Right)
+						pl.rotate = 0;
+					if (event.key.code == Keyboard::A || event.key.code == Keyboard::Left)
+						pl.rotate = 1;
+					if (event.key.code == Keyboard::W || event.key.code == Keyboard::Up)
+						pl.rotate = 2;
+					if (event.key.code == Keyboard::S || event.key.code == Keyboard::Down)
+						pl.rotate = 3;
+					if (event.key.code == Keyboard::Escape)
+						window.close();
+				}
+		}
+
+		//Если не собраны все кексы и игрок жив, функции запущены
+		if (cakes_num < 372 && life) {
+			pl.changeP();
+			en.changeE();
+		}
+
+		//Покрасить окно в черный
+		window.clear(Color::Black);
+
+		//Рисуются враги
+		for (int i = 0; i < hight; i++)
+			for (int j = 0; j < width; j++) {
+				if (Map[i][j] == '1')
+					enemy.setTextureRect(IntRect(block * en.rotate[0], 0, block, block));
+				if (Map[i][j] == '2')
+					enemy.setTextureRect(IntRect(block * en.rotate[1], 0, block, block));
+				if (Map[i][j] == '3')
+					enemy.setTextureRect(IntRect(block * en.rotate[2], 0, block, block));
+				if (Map[i][j] == '4')
+					enemy.setTextureRect(IntRect(block * en.rotate[3], 0, block, block));
+				if (Map[i][j] == 'V'|| Map[i][j] == ' '|| Map[i][j] == 'W'|| Map[i][j] == 'P')
+					continue;
+
+				enemy.setPosition(j * block, i * block);
+				window.draw(enemy);
+			}
+
+		//Рисуются стены
+		for (int i = 0; i < hight; i++)
+			for (int j = 0; j < width; j++) {
+				if (Map[i][j] == 'W')
+					wall.setTextureRect(IntRect(0, 0, block, block));
+				else
+					continue;
+
+				wall.setPosition(j * block, i * block);
+				window.draw(wall);
+			}
+
+		//Рисуется Пакмен
+		for (int i = 0; i < hight; i++)
+			for (int j = 0; j < width; j++) {
+				if (Map[i][j] == 'P')
+					pacman.setTextureRect(IntRect(block * int(pl.frame), block * pl.rotate, block, block));
+				else
+					continue;
+
+				pacman.setPosition(j * block, i * block);
+				window.draw(pacman);
+			}
+
+		//Рисуются кексы
+		for (int i = 0; i < hight; i++)
+			for (int j = 0; j < width; j++) {
+				if (Map[i][j] == ' ')
+					cake.setTextureRect(IntRect(0, 0, block, block));
+				else
+					continue;
+
+				cake.setPosition(j * block, i * block);
+				window.draw(cake);
+			}
+
+		//Если собрали все кексы - победа
+		if (cakes_num == 372)
+			window.draw(win);
+		//Если умерли - поражение
+		if (!life)
+			window.draw(lose);
+
+		//Отображение на экране
+		window.display();
+	}
+
+	return 0;
+}

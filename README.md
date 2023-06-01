@@ -16,10 +16,13 @@
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-![image](https://github.com/LesyaLopatkova/Pacman/assets/135190517/92018b6c-1256-45b4-8aca-38be3392d395) Экран победы
+![image](https://github.com/LesyaLopatkova/Pacman/assets/135190517/92018b6c-1256-45b4-8aca-38be3392d395)
+Экран победы
 
-![image](https://github.com/LesyaLopatkova/Pacman/assets/135190517/73985a12-09ec-402e-9bd3-acf4c25b4600) Экран поражения
+![image](https://github.com/LesyaLopatkova/Pacman/assets/135190517/73985a12-09ec-402e-9bd3-acf4c25b4600)
+Экран поражения
 
-![image](https://github.com/LesyaLopatkova/Pacman/assets/135190517/d199d095-1265-4266-8f5c-a9b5e2883aa3) Скриншот геймплея
+![image](https://github.com/LesyaLopatkova/Pacman/assets/135190517/d199d095-1265-4266-8f5c-a9b5e2883aa3)
+Скриншот геймплея
 
 
